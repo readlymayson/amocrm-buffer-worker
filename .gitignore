@@ -1,0 +1,23 @@
+# Токены и ключи доступа (НЕ КОММИТИТЬ!)
+tokens.json
+
+# Виртуальное окружение
+venv/
+.venv/
+env/
+.env
+
+# Логи
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Системные файлы
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
