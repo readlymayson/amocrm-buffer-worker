@@ -2,19 +2,47 @@
 Основной скрипт перемещения сделок из этапа «Буфер» в целевой этап.
 
 Логика:
-  1. Проверить/обновить Access Token.
-  2. Запросить порцию сделок из этапа «Буфер» (самые старые первыми).
-  3. Если сделок нет — завершить работу.
-  4. Переместить найденные сделки в целевой этап одним PATCH-запросом.
+  1. Проверить, что текущее время входит в рабочее окно (10:00–20:00 МСК).
+  2. Проверить/обновить Access Token.
+  3. Запросить одну сделку из этапа «Буфер» (самую старую первой).
+  4. Если сделок нет — завершить работу.
+  5. Переместить найденную сделку в целевой этап.
 
-Запускается по Cron. Пример crontab (каждые 30 минут):
-  */30 * * * * cd /path/to/project && python3 worker.py >> worker.log 2>&1
+Запускается по Cron. Пример crontab (каждые 5 минут):
+  */5 * * * * cd /path/to/project && python3 worker.py >> worker.log 2>&1
 """
 
 import sys
+from datetime import datetime, timezone, timedelta
+import builtins
+
 import requests
 import config
 from auth import get_valid_token
+
+MSK = timezone(timedelta(hours=config.MSK_OFFSET_HOURS))
+
+_original_print = builtins.print
+
+
+def _timestamped_print(*args, **kwargs):
+    """Добавляет дату/время МСК в начало каждой строки вывода."""
+    now = datetime.now(MSK).strftime("%Y-%m-%d %H:%M:%S")
+    _original_print(f"[{now}]", *args, **kwargs)
+
+
+builtins.print = _timestamped_print
+
+
+def is_within_work_hours() -> bool:
+    """Проверяет, входит ли текущее время МСК в рабочее окно.
+
+    Returns:
+        True если текущий час МСК между WORK_START_HOUR и WORK_END_HOUR.
+    """
+    now_msk = datetime.now(MSK)
+    return config.WORK_START_HOUR <= now_msk.hour < config.WORK_END_HOUR
+
 
 API_BASE = f"https://{config.API_DOMAIN}/api/v4"
 
@@ -84,6 +112,13 @@ def main():
     print("=" * 50)
     print("[worker] Запуск обработчика буфера amoCRM")
     print(f"[worker] Лимит: {config.LIMIT} сделок за запуск")
+
+    # Шаг 0. Проверка временного окна
+    if not is_within_work_hours():
+        now_msk = datetime.now(MSK)
+        print(f"[worker] Вне рабочего окна ({config.WORK_START_HOUR}:00–{config.WORK_END_HOUR}:00 МСК, "
+              f"сейчас {now_msk.hour}:{now_msk.minute:02d}). Завершение.")
+        return
 
     # Шаг 1. Авторизация
     token = get_valid_token()
