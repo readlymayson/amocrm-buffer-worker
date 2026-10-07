@@ -12,9 +12,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Данные интеграции (из AmoMarket -> Создать интеграцию) ---
-CLIENT_ID = os.getenv('AMOCRM_CLIENT_ID', '4e675dd4-c21b-42cd-a524-32c52eaf2a87')  # Integration ID (Client ID)
+CLIENT_ID = os.getenv('AMOCRM_CLIENT_ID')  # Integration ID (Client ID) — из .env!
 CLIENT_SECRET = os.getenv('AMOCRM_CLIENT_SECRET')  # Secret key — ТОЛЬКО из .env!
-REDIRECT_URI = os.getenv('AMOCRM_REDIRECT_URI', 'https://efrolov-dev.ru/amocrm-auth')  # Redirect URL
+REDIRECT_URI = os.getenv('AMOCRM_REDIRECT_URI')  # Redirect URL — из .env!
 
 # ── Проверка наличия критичного секрета ──
 if not CLIENT_SECRET:
@@ -32,9 +32,9 @@ if not CLIENT_SECRET:
     sys.exit(1)
 
 # --- ID воронки и этапов ---
-PIPELINE_ID = 10591630         # Воронка «Реактивация»
-BUFFER_STATUS_ID = 83527594    # Этап «В выборке» (откуда забираем)
-TARGET_STATUS_ID = 83527598    # Этап «Реактивация» (куда перемещаем)
+PIPELINE_ID = 0                 # ID воронки — замените на свой
+BUFFER_STATUS_ID = 0            # ID этапа «Буфер» — замените на свой
+TARGET_STATUS_ID = 0            # ID целевого этапа — замените на свой
 
 # --- Параметры выборки ---
 LIMIT = 1               # Сколько сделок обрабатывать за один запуск
@@ -49,4 +49,4 @@ TOKENS_FILE = "tokens.json"
 
 # --- Домены amoCRM ---
 OAUTH_DOMAIN = "www.amocrm.ru"           # Домен для страницы авторизации (OAuth)
-API_DOMAIN = "sweetshot63.amocrm.ru"     # Поддомен для API и обмена токена
+API_DOMAIN = "your-subdomain.amocrm.ru"  # Поддомен для API — замените на свой
